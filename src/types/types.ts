@@ -1,10 +1,14 @@
+import { RefObject } from "react";
+import UnitComponent from "../components/Unit";
+
 export interface Player {
-  units: any[];
+  units: any[],
 }
 
 export interface Unit {
-  x: number,
-  y: number,
+  row: number,
+  col: number,
+  ref: RefObject<UnitComponent>,
 }
 
 export interface Hex {

@@ -3,6 +3,8 @@ import { Component } from 'react';
 import { ColorMatrixFilter } from 'pixi.js';
 
 interface UnitProps {
+  initialRow: number,
+  initialCol: number,
   player: number,
 }
 
@@ -11,7 +13,7 @@ interface UnitState {
   col: number,
 }
 
-class Unit extends Component<UnitProps, UnitState> {
+class UnitComponent extends Component<UnitProps, UnitState> {
 
   private colorMatrixFilter;
 
@@ -25,7 +27,7 @@ class Unit extends Component<UnitProps, UnitState> {
     } else {
       this.colorMatrixFilter.browni(false);
     }
-  }  
+  }
 
   render() {
     return <Sprite
@@ -39,4 +41,4 @@ class Unit extends Component<UnitProps, UnitState> {
   }
 }
 
-export default Unit;
+export default UnitComponent;

@@ -1,4 +1,4 @@
-import { Component, RefObject, createRef } from 'react';
+import { Component, ReactNode, RefObject } from 'react';
 import { Container, Sprite } from '@pixi/react';
 import Unit from './Unit';
 
@@ -6,11 +6,11 @@ interface HexProps {
   imageSrc: string;
   row: number;
   col: number;
+  unitRefs: RefObject<Unit>[];
+  units: any[];
 }
 
 interface HexState {
-  unitRefs: RefObject<Unit>[];
-  units: any[];
 }
 
 class Hex extends Component<HexProps, HexState> {
@@ -18,17 +18,13 @@ class Hex extends Component<HexProps, HexState> {
   private tileHeight: number = 100;
   public row: number;
   public col: number;
+  public units: ReactNode[] = [];
 
-  constructor(props: any) {
+  constructor(props: HexProps) {
     super(props);
 
     this.row = props.row;
     this.col = props.col;
-
-    this.state = {
-      unitRefs: [],
-      units: [],
-    };
   }
 
   calculatePosition = () => {
@@ -41,23 +37,24 @@ class Hex extends Component<HexProps, HexState> {
     return { x, y };
   };
 
-  addUnit = (player: number) => {
-    const newUnitRef = createRef<Unit>();
-
-    this.setState(
-      (prevState) => ({
-        unitRefs: [...prevState.unitRefs, newUnitRef],
-        units: [...prevState.units, <Unit player={player} ref={newUnitRef} />],
-      })
-    );
-
-    return newUnitRef;
-  };
-
   render() {
-    const { imageSrc } = this.props;
-    const { units } = this.state;
+    const { imageSrc, units, unitRefs } = this.props;
     const { x, y } = this.calculatePosition();
+
+    const unitsToRender: ReactNode[] = [];
+
+    console.log(this.props);
+
+    // console.log(this.row)
+    // console.log(this.col)
+    // console.log(this.props.unitRefs[0].current?.state.row)
+    // console.log(this.props.unitRefs[0].current?.state.col)
+
+    // for (let i=0; i<this.props.units.length; i++) {
+    //   if (this.props.unitRefs[i].current?.state.row === this.row && this.props.unitRefs[i].current?.state.col === this.col) {
+    //     unitsToRender.push(this.props.units[i]);
+    //   }
+    // }
 
     return (
       <Container
@@ -69,7 +66,7 @@ class Hex extends Component<HexProps, HexState> {
           width={86.6}
           height={100}
         />
-        {units.map((unit, index) => (
+        {unitsToRender.map((unit, index) => (
           <Container key={index}>
             {unit}
           </Container>

@@ -1,6 +1,7 @@
 import React, { Component, RefObject } from 'react';
 import Board from './Board';
 import Player from './Player';
+import Unit from './Unit';
 
 interface GameProps {
   numPlayers: number,

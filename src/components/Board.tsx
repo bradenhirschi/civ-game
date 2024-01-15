@@ -1,7 +1,8 @@
-import { Component, createRef } from 'react';
+import { Component, RefObject, createRef } from 'react';
 import { Stage } from '@pixi/react';
 import Hex from './Hex';
 import Player from './Player';
+import Unit from './Unit';
 
 interface BoardProps {
   players: Player[];
@@ -9,6 +10,8 @@ interface BoardProps {
 
 interface BoardState {
   hexes: React.RefObject<Hex>[];
+  unitRefs: RefObject<Unit>[];
+  units: any[];
 }
 
 class Board extends Component<BoardProps, BoardState> {
@@ -26,6 +29,8 @@ class Board extends Component<BoardProps, BoardState> {
 
     this.state = {
       hexes: Array.from({ length: this.numHexes }, () => createRef<Hex>()),
+      unitRefs: [],
+      units: [],
     };
   }
 
@@ -37,7 +42,7 @@ class Board extends Component<BoardProps, BoardState> {
       if (newUnitRef) {
         this.players[i].addUnitRef(newUnitRef);
       } else {
-        console.error('Error creating initial units')
+        console.error('Error creating initial units');
       }
     });
   }
@@ -53,11 +58,13 @@ class Board extends Component<BoardProps, BoardState> {
         return 'desert.png';
     }
     return '';
-  }
+  };
 
   spawnUnitInRandomPosition = async (playerNum: number) => {
     const randomNumber = Math.floor(Math.random() * this.state.hexes.length);
     const hexRef = this.state.hexes[randomNumber];
+
+    console.log(randomNumber);
 
     // Wait for hexRef.current to be set
     await new Promise<void>((resolve) => {
@@ -72,11 +79,25 @@ class Board extends Component<BoardProps, BoardState> {
       checkRef();
     });
 
-    const newUnitRef = hexRef.current?.addUnit(playerNum);
+    const newUnitRef = createRef<Unit>();
+
+    this.setState(
+      (prevState) => ({
+        unitRefs: [...prevState.unitRefs, newUnitRef],
+        units: [
+          ...prevState.units,
+          <Unit
+            player={playerNum}
+            ref={newUnitRef}
+            initialRow={0}
+            initialCol={0}
+          />,
+        ],
+      }),
+    );
 
     return newUnitRef;
-  }
-
+  };
 
   render() {
     const { hexes } = this.state;
@@ -93,6 +114,8 @@ class Board extends Component<BoardProps, BoardState> {
             imageSrc={this.generateImageSrc()}
             row={Math.floor(index / this.numCols)}
             col={index % this.numCols}
+            unitRefs={this.state.unitRefs}
+            units={this.state.units}
           />
         ))}
       </Stage>

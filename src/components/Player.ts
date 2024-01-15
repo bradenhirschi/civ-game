@@ -7,8 +7,6 @@ class Player {
   addUnitRef = (unitRef: RefObject<Unit>) => {
 
     this.unitRefs.push(unitRef);
-
-    console.log(this.unitRefs)
   }
 }
 
