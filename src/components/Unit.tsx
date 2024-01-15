@@ -6,7 +6,12 @@ interface UnitProps {
   player: number,
 }
 
-class Unit extends Component<UnitProps> {
+interface UnitState {
+  row: number,
+  col: number,
+}
+
+class Unit extends Component<UnitProps, UnitState> {
 
   private colorMatrixFilter;
 

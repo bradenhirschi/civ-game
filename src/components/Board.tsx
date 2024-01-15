@@ -1,20 +1,28 @@
 import { Component, createRef } from 'react';
 import { Stage } from '@pixi/react';
 import Hex from './Hex';
+import Player from './Player';
+
+interface BoardProps {
+  players: Player[];
+}
 
 interface BoardState {
   hexes: React.RefObject<Hex>[];
 }
 
-class Board extends Component<{}, BoardState> {
+class Board extends Component<BoardProps, BoardState> {
   private numRows: number = 6;
   private numCols: number = 8;
   private numHexes: number = this.numRows * this.numCols;
   private hexWidth: number = 86;
   private hexHeight: number = 100;
+  private players: Player[] = [];
 
-  constructor(props: {}) {
+  constructor(props: BoardProps) {
     super(props);
+
+    this.players = props.players;
 
     this.state = {
       hexes: Array.from({ length: this.numHexes }, () => createRef<Hex>()),
@@ -22,8 +30,16 @@ class Board extends Component<{}, BoardState> {
   }
 
   componentDidMount() {
-    // console.log(this.state)
-    this.spawnUnitInRandomPosition();
+    let newUnitRef;
+    // Spawn each player's initial units
+    this.players.forEach(async (_, i) => {
+      newUnitRef = await this.spawnUnitInRandomPosition(i);
+      if (newUnitRef) {
+        this.players[i].addUnitRef(newUnitRef);
+      } else {
+        console.error('Error creating initial units')
+      }
+    });
   }
 
   generateImageSrc = () => {
@@ -39,14 +55,28 @@ class Board extends Component<{}, BoardState> {
     return '';
   }
 
-  spawnUnitInRandomPosition = () => {
+  spawnUnitInRandomPosition = async (playerNum: number) => {
     const randomNumber = Math.floor(Math.random() * this.state.hexes.length);
-    
-    setTimeout(() => {
-      this.state.hexes[randomNumber].current?.addUnit(0);
-      this.state.hexes[randomNumber+1].current?.addUnit(1);
-    }, 1000)
+    const hexRef = this.state.hexes[randomNumber];
+
+    // Wait for hexRef.current to be set
+    await new Promise<void>((resolve) => {
+      const checkRef = () => {
+        if (hexRef.current) {
+          resolve();
+        } else {
+          setTimeout(checkRef, 10); // Check again in 10 milliseconds
+        }
+      };
+
+      checkRef();
+    });
+
+    const newUnitRef = hexRef.current?.addUnit(playerNum);
+
+    return newUnitRef;
   }
+
 
   render() {
     const { hexes } = this.state;

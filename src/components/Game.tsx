@@ -20,7 +20,7 @@ class Game extends Component<GameProps, GameState> {
     super(props);
 
     for (let i = 0; i < props.numPlayers; i++) {
-      this.players.push(new Player({ playerNumber: i, board: this.boardRef.current! })); 
+      this.players.push(new Player()); 
     }
 
     this.state = {
@@ -42,7 +42,7 @@ class Game extends Component<GameProps, GameState> {
     return (
       <div>
         <h2>Current Player: {players[currentPlayer]}</h2>
-        <Board ref={this.boardRef} />
+        <Board ref={this.boardRef} players={this.players} />
         <button onClick={this.switchPlayer}>Switch Player</button>
       </div>
     );

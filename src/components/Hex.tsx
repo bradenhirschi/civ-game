@@ -26,7 +26,6 @@ class Hex extends Component<HexProps, HexState> {
     this.col = props.col;
 
     this.state = {
-      // Change this, why length 1
       unitRefs: [],
       units: [],
     };
@@ -45,10 +44,14 @@ class Hex extends Component<HexProps, HexState> {
   addUnit = (player: number) => {
     const newUnitRef = createRef<Unit>();
 
-    this.setState((prevState) => ({
-      unitRefs: [...prevState.unitRefs, newUnitRef],
-      units: [...prevState.units, <Unit player={player} />],
-    }));
+    this.setState(
+      (prevState) => ({
+        unitRefs: [...prevState.unitRefs, newUnitRef],
+        units: [...prevState.units, <Unit player={player} ref={newUnitRef} />],
+      })
+    );
+
+    return newUnitRef;
   };
 
   render() {
