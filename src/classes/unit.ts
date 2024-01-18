@@ -28,7 +28,7 @@ export class Unit extends Container {
     const sprite = Sprite.from(this.imageSrc);
     sprite.width = 30;
     sprite.height = 45;
-    // sprite.tint = this.playerNum === this.game.currentPlayer ? 0x00ff00 : 0xff0000;
+    sprite.tint = this.playerNum === 0 ? 0xa0f0a0 : 0xa0a0f0;
 
     // Interactivity
     sprite.eventMode = 'dynamic';
@@ -36,36 +36,57 @@ export class Unit extends Container {
 
     // Click listener
     sprite.on('click', () => {
-      this.onClick(0);
+      // Uncomment this to enable onClick
+      // this.onClick();
     });
-
-    // if (unit === this.game.activeUnit) {
-    //   unitSprite.tint = 0x0000ff;
-    // }
 
     return sprite;
   }
 
-  onClick = (currentPlayerNum: number) => {
-    // if (currentPlayerNum === this.playerNum) {
-    //   this.game.activeUnit = this;
-    // }
+  // onClick is temporarily disabled
+  // onClick = () => {
+  //   if (this.game.currentPlayer !== this.playerNum) {
+  //     return;
+  //   }
 
+  //   this.game.activeUnit = this;
+
+  //   // Draw white circle around unit
+  //   this.graphics = new Graphics();
+  //   this.graphics.lineStyle(2, 0xFFFFFF);
+  //   this.graphics.drawCircle(0, 15, this.sprite.width);
+  //   this.graphics.endFill();
+  //   this.graphics.position.set(this.x, this.y);
+  //   this.addChild(this.graphics);
+  // }
+
+  takeTurn = async () => {
+    this.game.currentPlayer = this.playerNum;
+    this.game.activeUnit = this;
+
+    // Draw white circle around unit
     this.graphics = new Graphics();
-
-    const cornerRadius = 10;
-    this.graphics.lineStyle(2, 0xFFFFFF); // Set line style (2 pixels width, white color in this example)
+    this.graphics.lineStyle(2, 0xFFFFFF);
     this.graphics.drawCircle(0, 15, this.sprite.width);
     this.graphics.endFill();
-
     this.graphics.position.set(this.x, this.y);
-
-
     this.addChild(this.graphics);
 
-    // this.removeChildren();
+    await new Promise<void>((resolve, reject) => {
+      const handleActiveUnitMoved = () => {
+        document.removeEventListener('movedActiveUnit', handleActiveUnitMoved);
+        resolve();
+      };
 
-    // this.sprite = Sprite.from('https://exfuptdlhimdvtecgddo.supabase.co/storage/v1/object/public/civ-game/desert.png?t=2024-01-16T12%3A35%3A28.921Z');
-    // this.addChild(this.sprite);
+      document.addEventListener('movedActiveUnit', handleActiveUnitMoved);
+    })
+  }
+
+  attack = () => {
+    console.log(`Player ${this.playerNum} unit attacking`)
+  }
+
+  defend = () => {
+    console.log(`Player ${this.playerNum} unit defending`)
   }
 }

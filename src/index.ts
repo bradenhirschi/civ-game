@@ -18,12 +18,15 @@ document.body.appendChild(currentPlayer);
 const app = new PIXI.Application<HTMLCanvasElement>({
       width: HEX_WIDTH * NUM_COLS + HEX_WIDTH / 2,
       height: HEX_HEIGHT * NUM_ROWS - ((NUM_ROWS - 1) * HEX_HEIGHT * .25),
-      backgroundColor: 0xffffff });
+      backgroundColor: 0xebd5b3 });
 
 document.body.appendChild(app.view);
 
 const game = new Game();
 
 app.stage.addChild(game);
+app.ticker.add(() => {
+  game.update();
+})
 
 game.init();

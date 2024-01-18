@@ -9,6 +9,7 @@ export class Hex extends Container {
   row;
   col;
   hexImageSrc;
+  sprite: PIXI.Sprite;
   units: Unit[] = [];
 
   constructor(game: Game, row: number, col: number) {
@@ -26,32 +27,18 @@ export class Hex extends Container {
     }
 
     // Hex sprite styling and positioning
-    let hexSprite = PIXI.Sprite.from(this.hexImageSrc);
-    hexSprite.width = HEX_WIDTH;
-    hexSprite.height = HEX_HEIGHT;
+    this.sprite = PIXI.Sprite.from(this.hexImageSrc);
+    this.sprite.width = HEX_WIDTH;
+    this.sprite.height = HEX_HEIGHT;
 
-    // Hex sprite hover listener
-    (hexSprite as any).on('mouseover', () => {
-      if (this.game.activeUnit) {
-        document.body.style.cursor = 'pointer';
-      }
-    });
-      (hexSprite as any).on('mouseleave', () => {
-        document.body.style.cursor = 'default';
-    });
+    // Interactivity
+    this.sprite.eventMode = 'dynamic';
 
-    // Hex sprite click listener
-    (hexSprite as any).eventMode = 'dynamic';
-    
-    (hexSprite as any).buttonMode = true;
-    (hexSprite as any).on('rightclick', () => {
-      this.onRightClick();
-    });
+    this.addChild(this.sprite);
 
-    this.addChild(hexSprite);
+    this.getUnits();
 
-    const units = this.getUnits();
-    units.forEach(unit => {
+    this.units.forEach(unit => {
       this.addChild(unit);
     });
   }
@@ -77,18 +64,64 @@ export class Hex extends Container {
   }
 
   getUnits = () => {
-    return this.game.units.filter(unit => unit.row === this.row && unit.col === this.col);
+    this.units = this.game.units.filter(unit => unit.row === this.row && unit.col === this.col);
   }
 
   onRightClick = () => {
-    const activeUnit = this.game.activeUnit;
+    console.log('right click hex');
 
-    if (activeUnit) {
-      const prevHex = this.game.hexes.find(hex => hex.row === activeUnit.row && hex.col === activeUnit.col);
-      prevHex!.removeChildren();
-      activeUnit.row = this.row;
-      activeUnit.col = this.col;
+    // Check if there's an active unit trying to move here
+    if (!this.game.activeUnit) return;
+
+    // Check if there's already a unit here and if so, initiate combat
+    if (this.units.length) {
+      this.game.activeUnit.attack();
+      // TODO change this when we add more units
+      this.units[0].defend();
     }
+
+    // Find previous location of active unit and remove unit from that hex
+    const prevHex = this.game.hexes.find(hex => hex.row === this.game.activeUnit.row && hex.col === this.game.activeUnit.col);
+    prevHex.removeChild(this.game.activeUnit);
+
+    // Update position of activeUnit
+    this.game.activeUnit.row = this.row;
+    this.game.activeUnit.col = this.col;
+
+    // Remove 'active' indicator from unit and set game active unit to null
+    this.game.activeUnit.removeChild(this.game.activeUnit.graphics);
     this.game.activeUnit = null;
+
+    // Dispatch event to let unit know it has moved
+    document.dispatchEvent(new Event('movedActiveUnit'));
+
+    // Update hex and remove right click listener
+    this.update();
+    this.sprite.removeAllListeners();
+  }
+
+  update = () => {
+    // UI changes and click listener for when a unit is moving
+    if (this.game.activeUnit) {
+      this.sprite.cursor = 'pointer';
+
+      // TODO change this, we shouldn't need to remove listeners and reapply every update (every frame)
+      this.sprite.removeAllListeners();
+      this.sprite.on('rightclick', () => {
+        this.onRightClick();
+      });
+    } else {
+      this.sprite.cursor = 'default';
+      this.sprite.removeAllListeners();
+    }
+
+    // Remove all units and fetch current units
+    this.units.forEach(unit => {
+      this.removeChild(unit);
+    })
+    this.getUnits();
+    this.units.forEach(unit => {
+      this.addChild(unit);
+    });
   }
 }

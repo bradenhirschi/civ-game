@@ -2,8 +2,8 @@ import { Game } from "./game";
 import { Unit } from "./unit";
 
 export class Player {
-  playerNum;
-  game;
+  playerNum: number;
+  game: Game;
   units: Unit[] = [];
 
   constructor(game: Game, playerNum: number) {
@@ -12,6 +12,7 @@ export class Player {
   }
 
   getUnits = () => {
+    this.units = [];
     this.game.units.forEach(unit => {
       if (unit.playerNum === this.playerNum) {
         this.units.push(unit);
@@ -19,11 +20,12 @@ export class Player {
     })
   }
 
-  takeTurn = () => {
+  takeTurn = async () => {
     this.getUnits();
 
-    this.units.forEach(unit => {
-      this.game.activeUnit = unit;
-    })
+    const promises = this.units.map(unit => unit.takeTurn());
+    await Promise.all(promises);
+
+    return Promise.resolve();
   }
 }
