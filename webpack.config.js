@@ -9,7 +9,8 @@ module.exports = {
   devtool: 'inline-source-map',
   plugins: [
     new HtmlWebpackPlugin({
-      title: `Civilization't`,
+      template: 'src/index.html',
+      filename: 'index.html',
     }),
   ],
   output: {

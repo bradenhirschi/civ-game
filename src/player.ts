@@ -1,10 +1,12 @@
+import City from "./city";
 import { Game } from "./game";
-import { Unit } from "./unit";
+import { Unit } from "./units/unit";
 
 export class Player {
   playerNum: number;
   game: Game;
   units: Unit[] = [];
+  cities: City[] = [];
 
   constructor(game: Game, playerNum: number) {
     this.game = game;
@@ -14,8 +16,17 @@ export class Player {
   getUnits = () => {
     this.units = [];
     this.game.units.forEach(unit => {
-      if (unit.playerNum === this.playerNum) {
+      if (unit.player === this) {
         this.units.push(unit);
+      }
+    })
+  }
+
+  getCities = () => {
+    this.cities = [];
+    this.game.cities.forEach(city => {
+      if (city.player === this) {
+        this.cities.push(city);
       }
     })
   }

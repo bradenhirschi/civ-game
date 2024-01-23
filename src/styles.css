@@ -5,3 +5,32 @@ body {
   height: 90vh;
   background-color: #ebd5b3;
 }
+
+#details-container {
+  display: flex;
+}
+
+#current-unit {
+  border: 1px solid black;
+  background: navy;
+  color: white;
+  width: 300px;
+  margin-right: 10px;
+}
+
+#current-unit-type {
+  font-size: 24px;
+}
+
+#current-action-description {
+  border-radius: 9999px;
+  padding: 2px 5px;
+  margin-bottom: 10px;
+}
+
+#current-action-icon {
+  height: 100px;
+  width: 100px;
+  border-radius: 9999px;
+  background: navy;
+}

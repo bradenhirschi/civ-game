@@ -1,24 +1,37 @@
-import { Game } from "./game";
 import { Container, Sprite, Graphics } from 'pixi.js';
+
+import { Game } from "../game";
+import { Player } from "../player";
 
 export class Unit extends Container {
   game: Game;
-  playerNum: number;
+  player: Player;
   row: number;
   col: number;
-  imageSrc: string = 'https://exfuptdlhimdvtecgddo.supabase.co/storage/v1/object/public/civ-game/infantry.png?t=2024-01-16T13%3A15%3A02.170Z';
+  type: string;
+
+  maxHitPoints: number = 100;
+  maxCombatStrength: number = 20;
+
+  hitPoints: number = 100;
+  movementPoints: number = 3;
+  combatStrength: number = 20;
+
+  imageSrc: string;
   sprite: Sprite;
   graphics: Graphics;
 
-  constructor(game: Game, playerNum: number, row: number, col: number) {
+  constructor(game: Game, player: Player, row: number, col: number, imageSrc: string) {
     super();
 
     this.game = game;
-    this.playerNum = playerNum;
+    this.player = player;
     this.row = row;
     this.col = col;
     this.x = 15;
     this.y = 15;
+
+    this.imageSrc = imageSrc;
 
     this.sprite = this.createSprite();
     this.addChild(this.sprite);
@@ -28,7 +41,7 @@ export class Unit extends Container {
     const sprite = Sprite.from(this.imageSrc);
     sprite.width = 30;
     sprite.height = 45;
-    sprite.tint = this.playerNum === 0 ? 0xa0f0a0 : 0xa0a0f0;
+    sprite.tint = this.player === this.game.players[0] ? 0xa0f0a0 : 0xa0a0f0;
 
     // Interactivity
     sprite.eventMode = 'dynamic';
@@ -61,8 +74,11 @@ export class Unit extends Container {
   // }
 
   takeTurn = async () => {
-    this.game.currentPlayer = this.playerNum;
+    this.game.currentPlayer = this.player;
+    // TODO Move these to some sort of game 'set active unit' function to handle side effects
     this.game.activeUnit = this;
+
+    this.game.updatecurrentUnitTypeDisplay();
 
     // Draw white circle around unit
     this.graphics = new Graphics();
@@ -82,11 +98,38 @@ export class Unit extends Container {
     })
   }
 
-  attack = () => {
-    console.log(`Player ${this.playerNum} unit attacking`)
+  attack = (defendingUnit: Unit) => {
+    console.log(`Player ${this.player.playerNum} unit attacking`);
+
+    const defeated = defendingUnit.defend(this);
+
+    this.game.updatecurrentUnitTypeDisplay();
+
+    return defeated;
   }
 
-  defend = () => {
-    console.log(`Player ${this.playerNum} unit defending`)
+  defend = (attackingUnit: Unit) => {
+    console.log(`Player ${this.player.playerNum} unit defending`);
+
+    const strengthDifference = attackingUnit.combatStrength - this.combatStrength;
+    const randomNumber = 0.8 + Math.random() * 0.4; // Between .8 and 1.2
+    const damage = Math.round(30 * (Math.E ** (0.04 * strengthDifference)) * randomNumber);
+
+    this.hitPoints -= damage;
+
+    console.log(`Player ${this.player.playerNum} unit has ${this.hitPoints} hit points remaining`);
+
+    if (this.hitPoints <= 0) {
+      this.destroy();
+      return 1;
+    }
+    return 0;
+  }
+
+  destroy = () => {
+    const idx = this.game.units.indexOf(this);
+    this.game.units.splice(idx, 1);
+
+    console.log(`Player ${this.player.playerNum}'s unit has been destroyed`);
   }
 }
