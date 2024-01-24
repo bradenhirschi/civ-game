@@ -1,6 +1,6 @@
-import City from "./city";
-import { Game } from "./game";
-import { Unit } from "./units/unit";
+import City from "./City";
+import { Game } from "./Game";
+import { Unit } from "./units/Unit";
 
 export class Player {
   playerNum: number;
@@ -34,8 +34,9 @@ export class Player {
   takeTurn = async () => {
     this.getUnits();
 
-    const promises = this.units.map(unit => unit.takeTurn());
-    await Promise.all(promises);
+     for (const unit of this.units) {
+        await unit.takeTurn();
+    }
 
     return Promise.resolve();
   }

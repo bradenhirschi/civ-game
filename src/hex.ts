@@ -1,10 +1,10 @@
 import * as PIXI from 'pixi.js';
 import { Container } from "pixi.js";
-import { Game } from "./game";
-import { Unit } from "./units/unit";
-import { HEX_HEIGHT, HEX_WIDTH } from './constants';
+import { Game } from "./Game";
+import { Unit } from "./units/Unit";
+import { HEX_HEIGHT, HEX_SIZE, HEX_WIDTH } from './constants';
 import { convertOffsetToAxial } from './utils';
-import City from './city';
+import City from './City';
 
 export class Hex extends Container {
   game;
@@ -12,8 +12,9 @@ export class Hex extends Container {
   col;
   hexImageSrc;
   sprite: PIXI.Sprite;
-  units: Unit[] = [];
+  unit: Unit;
   city: City;
+  graphics: PIXI.Graphics;
 
   constructor(game: Game, row: number, col: number) {
     super();
@@ -34,16 +35,24 @@ export class Hex extends Container {
     this.sprite.width = HEX_WIDTH;
     this.sprite.height = HEX_HEIGHT;
 
+    // Create graphics circle for onMouseDown
+    this.graphics = new PIXI.Graphics();
+    this.graphics.lineStyle(2, 0xFFFFFF);
+    this.graphics.drawCircle(HEX_WIDTH / 2, HEX_HEIGHT / 2, HEX_WIDTH / 2.5);
+
     // Interactivity
     this.sprite.eventMode = 'dynamic';
+    this.sprite.on('rightdown', () => {
+        this.onRightDown();
+      });
+      this.sprite.on('rightup', () => {
+        this.onRightUp();
+      });
+    this.sprite.on('rightclick', () => {
+        this.onRightClick();
+      });
 
     this.addChild(this.sprite);
-
-    // this.getUnits();
-
-    // this.units.forEach(unit => {
-    //   this.addChild(unit);
-    // });
   }
 
   generateRandomImageSrc = () => {
@@ -51,23 +60,20 @@ export class Hex extends Container {
     switch (randomNumber) {
       case 1:
         return 'https://exfuptdlhimdvtecgddo.supabase.co/storage/v1/object/public/civ-game/grass.png?t=2024-01-16T04%3A02%3A18.596Z';
-        return 'grass.png';
       case 2:
         return 'https://exfuptdlhimdvtecgddo.supabase.co/storage/v1/object/public/civ-game/clay.png?t=2024-01-16T04%3A02%3A30.970Z';
-        return 'clay.png';
       case 3:
         return 'https://exfuptdlhimdvtecgddo.supabase.co/storage/v1/object/public/civ-game/desert.png?t=2024-01-16T12%3A35%3A28.921Z';
-        return 'desert.png';
     }
     return '';
   };
 
   addUnit = (unit: Unit) => {
-    this.units.push(unit);
+    this.unit = unit;
   };
 
   getUnits = () => {
-    this.units = this.game.units.filter(unit => unit.row === this.row && unit.col === this.col);
+    this.unit = this.game.units.find(unit => unit.row === this.row && unit.col === this.col);
   };
 
   getCity = () => {
@@ -80,92 +86,56 @@ export class Hex extends Container {
 
     const distance = (Math.abs(aq - bq) + Math.abs(aq + ar - bq - br) + Math.abs(ar - br)) / 2;
 
-    // console.log(distance);
-
     if (!this.game.activeUnit) return false;
 
-    if (distance > this.game.activeUnit.movementPoints) return false;
-
-    // console.log('hex position', this.row, this.col);
-    // console.log('active unit position', this.game.activeUnit.row, this.game.activeUnit.col);
-
-    const neighborLocations = [
-      {}
-    ]
+    if (distance > 1) return false;
 
     return true;
   };
 
+  onRightDown = () => {
+    console.log('donw')
+    this.addChild(this.graphics);
+  }
+
+  onRightUp = () => {
+    console.log('op')
+    this.removeChild(this.graphics);
+  }
+
   onRightClick = () => {
     console.log('right click hex');
 
-    let wonBattle = 1;
-
-    // TODO don't run this again, it already runs in the hex update loops
-    const activeUnitCanMoveHere = this.checkIfActiveUnitCanMoveHere();
+    let wonBattle = true;
 
     // Check if there's an active unit trying to move here
-    if (!this.game.activeUnit || !activeUnitCanMoveHere) return;
+    if (!this.game.activeUnit || !this.checkIfActiveUnitCanMoveHere()) return;
 
     // Check if there's already a unit here and if so, initiate combat
-    if (this.units.length) {
-      // TODO change this when we add more units. It shouldn't be units[0]
-      wonBattle = this.game.activeUnit.attack(this.units[0]);
+    this.getUnits();
+    if (this.unit) {
+      if (this.unit.type === 'SETTLER') {
+        this.unit.player = this.game.activeUnit.player;
+        wonBattle = true;
+      } else {
+        wonBattle = this.game.activeUnit.attack(this.unit);
+      }     
     }
 
     if (wonBattle) {
-      // Find previous location of active unit and remove unit from that hex
-      // const prevHex = this.game.hexes.find(hex => hex.row === this.game.activeUnit.row && hex.col === this.game.activeUnit.col);
-      // prevHex.removeChild(this.game.activeUnit);
-
       // Update position of activeUnit
-      this.game.activeUnit.row = this.row;
-      this.game.activeUnit.col = this.col;
+      this.game.activeUnit.changePosition(this.row, this.col);
     }
 
-    // Remove 'active' indicator from unit and set game active unit to null
-    this.game.activeUnit.removeChild(this.game.activeUnit.graphics);
-    this.game.activeUnit = null;
+    this.game.activeUnit.movementPoints -= 1;
 
-    // Dispatch event to let unit know it has moved
-    document.dispatchEvent(new Event('movedActiveUnit'));
+    if (this.game.activeUnit.movementPoints <= 0) {
+      // Dispatch event to let unit know it has moved
+      document.dispatchEvent(new Event('movedActiveUnit'));
 
-    // Update hex and remove right click listener
-    this.update();
-    this.sprite.removeAllListeners();
-  }
-
-  update = () => {
-    // UI changes and click listener for when a unit is moving
-    if (this.game.activeUnit && this.checkIfActiveUnitCanMoveHere()) {
-      this.sprite.cursor = 'pointer';
-
-      // TODO change this, we shouldn't need to remove listeners and reapply every update (every frame)
-      this.sprite.removeAllListeners();
-      this.sprite.on('rightclick', () => {
-        this.onRightClick();
-      });
-    } else {
-      this.sprite.cursor = 'default';
-      this.sprite.removeAllListeners();
-    }
-
-    // Remove all units and fetch current units
-    // this.units.forEach(unit => {
-    //   this.removeChild(unit);
-    // })
-    // this.getUnits();
-    // this.units.forEach(unit => {
-    //   this.addChild(unit);
-    // });
-
-    // Remove all cities and fetch current cities
-    if (this.city) {
-      this.removeChild(this.city);
-    }
-    this.getCity();
-    if (this.city) {
-      this.addChild(this.city);
+      // Remove 'active' indicator from unit and set game active unit to null
+      this.game.activeUnit.removeChild(this.game.activeUnit.graphics);
+      this.game.activeUnit = null;
     }
   }
 }

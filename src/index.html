@@ -9,17 +9,51 @@
     <title>Civilization't</title>
   </head>
   <body>
-    <div id="game-container"></div>
+    <div id="info-bar"></div>
+    <div id="board-container"></div>
+
+    <div
+      id="minimap-container"
+      class="default-container"
+    ></div>
+
     <div id="details-container">
-      <div id="current-unit">
+      <div
+        id="current-unit"
+        class="default-container"
+      >
         <div id="current-unit-type"></div>
-        <div id="current-unit-hit-points"></div>
-        <div id="current-unit-movement-points"></div>
-        <button id="current-unit-action-btn-1">Found city</button>
+
+        <div class="row-container">
+          <img
+            id="hp-icon"
+            class="stat-icon"
+          />
+          <div id="current-unit-hit-points"></div>
+        </div>
+
+        <div class="row-container">
+          <img
+            id="mp-icon"
+            class="stat-icon"
+          />
+          <div id="current-unit-movement-points"></div>
+        </div>
+
+        <div id="current-unit-action-buttons">
+          <button id="current-unit-action-btn-1">Found city</button>
+          <button id="current-unit-action-btn-2">Skip turn</button>
+        </div>
       </div>
       <div id="current-action">
-        <div id="current-action-description"></div>
-        <div id="current-action-icon"></div>
+        <div
+          id="current-action-description"
+          class="default-container"
+        ></div>
+        <div
+          id="current-action-icon"
+          class="default-container"
+        ></div>
       </div>
     </div>
   </body>

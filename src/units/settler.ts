@@ -1,10 +1,10 @@
-import City from "../city";
-import { Game } from "../game";
-import { Player } from "../player";
-import { Unit } from "./unit";
+import City from "../City";
+import { Game } from "../Game";
+import { Player } from "../Player";
+import { Unit } from "./Unit";
 
 export class Settler extends Unit {
-  type = 'Settler';
+  type = 'SETTLER';
 
   constructor(game: Game, player: Player, row: number, col: number) {
     const imageSrc = 'https://exfuptdlhimdvtecgddo.supabase.co/storage/v1/object/public/civ-game/settler.png?t=2024-01-22T18%3A47%3A22.305Z';
@@ -16,6 +16,7 @@ export class Settler extends Unit {
     const city = new City(this.game, this.player, this.row, this.col);
     this.game.cities.push(city);
 
-    console.log(this.game);
+    this.game.addChild(city);
+    this.destroy();
   }
 }

@@ -1,9 +1,9 @@
-import { Game } from "../game";
-import { Player } from "../player";
-import { Unit } from "./unit";
+import { Game } from "../Game";
+import { Player } from "../Player";
+import { Unit } from "./Unit";
 
 export class Warrior extends Unit {
-  type = 'Warrior';
+  type = 'WARRIOR';
 
   constructor(game: Game, player: Player, row: number, col: number) {
 

@@ -1,7 +1,9 @@
-import { Container, Sprite, Graphics } from 'pixi.js';
+import { Container, Sprite, Graphics, ObservablePoint } from 'pixi.js';
 
-import { Game } from "../game";
-import { Player } from "../player";
+import { Game } from "../Game";
+import { Player } from "../Player";
+import { HEX_HEIGHT, HEX_WIDTH } from '../constants';
+import { getHexCenterPoint } from '../utils';
 
 export class Unit extends Container {
   game: Game;
@@ -11,11 +13,13 @@ export class Unit extends Container {
   type: string;
 
   maxHitPoints: number = 100;
-  maxCombatStrength: number = 20;
+  hitPoints: number = this.maxHitPoints;
 
-  hitPoints: number = 100;
-  movementPoints: number = 3;
-  combatStrength: number = 20;
+  maxCombatStrength: number = 20;
+  combatStrength: number = this.maxCombatStrength;
+
+  maxMovementPoints: number = 3;
+  movementPoints: number = this.maxMovementPoints;
 
   imageSrc: string;
   sprite: Sprite;
@@ -28,8 +32,11 @@ export class Unit extends Container {
     this.player = player;
     this.row = row;
     this.col = col;
-    this.x = 15;
-    this.y = 15;
+    const {x, y} = getHexCenterPoint(row, col);
+    this.x = x;
+    this.y = y;
+
+    console.log(this.row, this.col)
 
     this.imageSrc = imageSrc;
 
@@ -41,51 +48,25 @@ export class Unit extends Container {
     const sprite = Sprite.from(this.imageSrc);
     sprite.width = 30;
     sprite.height = 45;
-    sprite.tint = this.player === this.game.players[0] ? 0xa0f0a0 : 0xa0a0f0;
-
-    // Interactivity
-    sprite.eventMode = 'dynamic';
-    sprite.cursor = 'pointer';
-
-    // Click listener
-    sprite.on('click', () => {
-      // Uncomment this to enable onClick
-      // this.onClick();
-    });
+    sprite.anchor.set(0.5, 0.5)
+    sprite.tint = this.player === this.game.players[0] ? 0xa0ffa0 : 0xa0a0f0;
 
     return sprite;
   }
 
-  // onClick is temporarily disabled
-  // onClick = () => {
-  //   if (this.game.currentPlayer !== this.playerNum) {
-  //     return;
-  //   }
-
-  //   this.game.activeUnit = this;
-
-  //   // Draw white circle around unit
-  //   this.graphics = new Graphics();
-  //   this.graphics.lineStyle(2, 0xFFFFFF);
-  //   this.graphics.drawCircle(0, 15, this.sprite.width);
-  //   this.graphics.endFill();
-  //   this.graphics.position.set(this.x, this.y);
-  //   this.addChild(this.graphics);
-  // }
-
   takeTurn = async () => {
-    this.game.currentPlayer = this.player;
     // TODO Move these to some sort of game 'set active unit' function to handle side effects
     this.game.activeUnit = this;
-
     this.game.updatecurrentUnitTypeDisplay();
+    this.game.currentPlayer = this.player;
+    // end TODO
+
+    this.movementPoints = this.maxMovementPoints;
 
     // Draw white circle around unit
     this.graphics = new Graphics();
-    this.graphics.lineStyle(2, 0xFFFFFF);
+    this.graphics.lineStyle(2, 0xCCCCCC);
     this.graphics.drawCircle(0, 15, this.sprite.width);
-    this.graphics.endFill();
-    this.graphics.position.set(this.x, this.y);
     this.addChild(this.graphics);
 
     await new Promise<void>((resolve, reject) => {
@@ -96,6 +77,14 @@ export class Unit extends Container {
 
       document.addEventListener('movedActiveUnit', handleActiveUnitMoved);
     })
+  }
+
+  changePosition = (row: number, col: number) => {
+    this.row = row;
+    this.col = col;
+    const {x, y} = getHexCenterPoint(row, col)
+    this.x = x;
+    this.y = y;
   }
 
   attack = (defendingUnit: Unit) => {
@@ -121,14 +110,16 @@ export class Unit extends Container {
 
     if (this.hitPoints <= 0) {
       this.destroy();
-      return 1;
+      return true;
     }
-    return 0;
+    return false;
   }
 
   destroy = () => {
     const idx = this.game.units.indexOf(this);
     this.game.units.splice(idx, 1);
+
+    this.game.removeChild(this);
 
     console.log(`Player ${this.player.playerNum}'s unit has been destroyed`);
   }

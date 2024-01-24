@@ -1,6 +1,7 @@
 import { Container, Sprite } from "pixi.js";
-import { Player } from "./player";
-import { Game } from "./game";
+import { Player } from "./Player";
+import { Game } from "./Game";
+import { getHexCenterPoint } from "./utils";
 
 class City extends Container {
   game: Game;
@@ -16,6 +17,11 @@ class City extends Container {
     this.game = game;
     this.player = player;
     this.row = row;
+    this.col = col;
+    
+    const {x, y} = getHexCenterPoint(row, col);
+    this.x = x;
+    this.y = y;
     this.col = col;
 
     this.sprite = this.createSprite();
@@ -35,8 +41,7 @@ class City extends Container {
 
     // Click listener
     sprite.on('click', () => {
-      // Uncomment this to enable onClick
-      // this.onClick();
+      this.game.uiControls.setActiveDisplay(this);
     });
 
     return sprite;
